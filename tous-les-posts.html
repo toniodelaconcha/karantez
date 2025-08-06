@@ -67,7 +67,11 @@
       container.innerHTML = sorted.map(post => `
         <article class="mb-4 p-4 rounded shadow" style="background-color: var(--card-bg); border: 1px solid var(--border);">
           <div class="flex justify-between items-center mb-2">
-            <h2 class="text-lg font-semibold">${categories[post.category] || '📝'} ${post.title}</h2>
+            <h2 class="text-lg font-semibold">
+              <a href="post.html?id=${post.id}" class="hover:underline" style="color: var(--accent);">
+                ${categories[post.category] || '📝'} ${post.title}
+              </a>
+            </h2>
             <span class="text-sm opacity-70">${post.date}</span>
           </div>
           ${post.shortDescription ? `<p class="text-sm mb-2">${post.shortDescription}</p>` : ''}
