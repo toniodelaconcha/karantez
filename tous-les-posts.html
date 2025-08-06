@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tous les posts - Karantez-Krono</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #fff;
+      color: #111827;
+      font-family: system-ui;
+      padding: 2rem;
+      max-width: 1024px;
+      margin: auto;
+    }
+    article {
+      background: #f9fafb;
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="font-size: 2rem; font-weight: bold; margin-bottom: 2rem;">🗂️ Tous les posts</h1>
+  <div id="allPostsContainer"></div>
+  <script>
+    const container = document.getElementById('allPostsContainer');
+    const posts = JSON.parse(localStorage.getItem('karantez-posts') || '[]');
+    const categories = {
+      books: '📚',
+      films: '🎬',
+      music: '🎵',
+      concerts: '🎤',
+      exhibitions: '🖼️',
+      recipes: '🍳',
+      series: '📺',
+      architecture: '🏛️'
+    };
+
+    if (posts.length === 0) {
+      container.innerHTML = "<p>Aucun post trouvé.</p>";
+    } else {
+      const sorted = posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+      container.innerHTML = sorted.map(post => `
+        <article>
+          <div style="display: flex; justify-content: space-between;">
+            <h2 style="font-size: 1.25rem; font-weight: 600;">${categories[post.category] || '📝'} ${post.title}</h2>
+            <span style="font-size: 0.875rem; opacity: 0.6;">${post.date}</span>
+          </div>
+          <p style="margin-top: 0.25rem; color: #4b5563;">${post.shortDescription || ''}</p>
+          ${post.link ? `<a href="${post.link}" target="_blank" style="color: #2563eb; text-decoration: underline;">Voir plus</a>` : ''}
+        </article>
+      `).join('');
+    }
+  </script>
+</body>
+</html>
