@@ -1,60 +1,84 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tous les posts - Karantez-Krono</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    .theme-yellow { --bg: #000; --card-bg: #1f2937; --text: #fbbf24; --accent: #fde047; --border: #fbbf24; }
+    .theme-blue { --bg: #fff; --card-bg: #eff6ff; --text: #1e3a8a; --accent: #1d4ed8; --border: #93c5fd; }
+    .theme-green { --bg: #fff; --card-bg: #f0fdf4; --text: #14532d; --accent: #16a34a; --border: #86efac; }
     body {
-      background-color: #fff;
-      color: #111827;
+      background-color: var(--bg);
+      color: var(--text);
       font-family: system-ui;
-      padding: 2rem;
-      max-width: 1024px;
-      margin: auto;
-    }
-    article {
-      background: #f9fafb;
-      padding: 1.5rem;
-      border-radius: 0.75rem;
-      border: 1px solid #e5e7eb;
-      margin-bottom: 1.5rem;
     }
   </style>
 </head>
 <body>
-  <h1 style="font-size: 2rem; font-weight: bold; margin-bottom: 2rem;">🗂️ Tous les posts</h1>
-  <div id="allPostsContainer"></div>
+  <header class="p-4 shadow" style="background-color: var(--card-bg);">
+    <div class="max-w-4xl mx-auto flex justify-between items-center">
+      <h1 class="text-2xl font-bold" style="color: var(--accent);">📚 Tous les posts</h1>
+      <a href="index.html" class="text-sm font-semibold px-3 py-2 rounded-full" style="background-color: var(--accent); color: #000;">← Retour à l'accueil</a>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto p-4">
+    <div class="mb-4">
+      <label for="categoryFilter" class="block text-sm mb-1">Filtrer par catégorie :</label>
+      <select id="categoryFilter" class="w-full p-2 rounded border" style="background-color: var(--card-bg); color: var(--text); border-color: var(--border);">
+        <option value="">Toutes les catégories</option>
+        <option value="books">📚 Livres</option>
+        <option value="films">🎬 Films</option>
+        <option value="music">🎵 Musique</option>
+        <option value="concerts">🎤 Concerts</option>
+        <option value="exhibitions">🖼️ Expositions</option>
+        <option value="recipes">🍳 Recettes</option>
+        <option value="series">📺 Séries TV</option>
+        <option value="architecture">🏛️ Architecture</option>
+      </select>
+    </div>
+
+    <div id="allPostsContainer"></div>
+  </main>
+
   <script>
     const container = document.getElementById('allPostsContainer');
+    const categoryFilter = document.getElementById('categoryFilter');
     const posts = JSON.parse(localStorage.getItem('karantez-posts') || '[]');
+    const currentTheme = localStorage.getItem('karantez-theme') || 'yellow';
+    document.body.className = `theme-${currentTheme}`;
+
     const categories = {
-      books: '📚',
-      films: '🎬',
-      music: '🎵',
-      concerts: '🎤',
-      exhibitions: '🖼️',
-      recipes: '🍳',
-      series: '📺',
-      architecture: '🏛️'
+      books: '📚', films: '🎬', music: '🎵', concerts: '🎤',
+      exhibitions: '🖼️', recipes: '🍳', series: '📺', architecture: '🏛️'
     };
 
-    if (posts.length === 0) {
-      container.innerHTML = "<p>Aucun post trouvé.</p>";
-    } else {
-      const sorted = posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+    function renderPosts(filter = '') {
+      const filtered = filter ? posts.filter(p => p.category === filter) : posts;
+      const sorted = filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      if (sorted.length === 0) {
+        container.innerHTML = '<p>Aucun post trouvé.</p>';
+        return;
+      }
+
       container.innerHTML = sorted.map(post => `
-        <article>
-          <div style="display: flex; justify-content: space-between;">
-            <h2 style="font-size: 1.25rem; font-weight: 600;">${categories[post.category] || '📝'} ${post.title}</h2>
-            <span style="font-size: 0.875rem; opacity: 0.6;">${post.date}</span>
+        <article class="mb-4 p-4 rounded shadow" style="background-color: var(--card-bg); border: 1px solid var(--border);">
+          <div class="flex justify-between items-center mb-2">
+            <h2 class="text-lg font-semibold">${categories[post.category] || '📝'} ${post.title}</h2>
+            <span class="text-sm opacity-70">${post.date}</span>
           </div>
-          <p style="margin-top: 0.25rem; color: #4b5563;">${post.shortDescription || ''}</p>
-          ${post.link ? `<a href="${post.link}" target="_blank" style="color: #2563eb; text-decoration: underline;">Voir plus</a>` : ''}
+          ${post.shortDescription ? `<p class="text-sm mb-2">${post.shortDescription}</p>` : ''}
+          ${post.link ? `<a href="${post.link}" target="_blank" class="text-sm underline text-blue-400">Lien externe</a>` : ''}
         </article>
       `).join('');
     }
+
+    categoryFilter.addEventListener('change', e => renderPosts(e.target.value));
+
+    renderPosts();
   </script>
 </body>
 </html>
