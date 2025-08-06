@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Post - Karantez-Krono</title>
+  <title>Tous les posts - Karantez-Krono</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .theme-yellow { --bg: #000; --card-bg: #1f2937; --text: #fbbf24; --accent: #fde047; --border: #fbbf24; }
@@ -19,14 +19,47 @@
 <body>
   <header class="p-4 shadow" style="background-color: var(--card-bg);">
     <div class="max-w-4xl mx-auto flex justify-between items-center">
-      <h1 class="text-xl font-bold" style="color: var(--accent);">📝 Détail du post</h1>
-      <a href="tous-les-posts.html" class="text-sm font-semibold px-3 py-2 rounded-full" style="background-color: var(--accent); color: #000;">← Tous les posts</a>
+      <h1 class="text-2xl font-bold" style="color: var(--accent);">📚 Tous les posts</h1>
+      <a href="index.html" class="text-sm font-semibold px-3 py-2 rounded-full" style="background-color: var(--accent); color: #000;">← Retour à l'accueil</a>
     </div>
   </header>
 
-  <main class="max-w-4xl mx-auto p-4" id="postContainer"></main>
+  <main class="max-w-4xl mx-auto p-4">
+    <div class="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div>
+        <label for="categoryFilter" class="block text-sm mb-1">Filtrer par catégorie :</label>
+        <select id="categoryFilter" class="w-full p-2 rounded border" style="background-color: var(--card-bg); color: var(--text); border-color: var(--border);">
+          <option value="">Toutes les catégories</option>
+          <option value="books">📚 Livres</option>
+          <option value="films">🎬 Films</option>
+          <option value="music">🎵 Musique</option>
+          <option value="concerts">🎤 Concerts</option>
+          <option value="exhibitions">🖼️ Expositions</option>
+          <option value="recipes">🍳 Recettes</option>
+          <option value="series">📺 Séries TV</option>
+          <option value="architecture">🏛️ Architecture</option>
+        </select>
+      </div>
+      <div>
+        <label for="dateFilter" class="block text-sm mb-1">Filtrer par date :</label>
+        <input type="date" id="dateFilter" class="w-full p-2 rounded border" style="background-color: var(--card-bg); color: var(--text); border-color: var(--border);">
+      </div>
+      <div class="flex items-end">
+        <button id="resetBtn" class="w-full p-2 rounded font-semibold" style="background-color: var(--accent); color: #000;">🔄 Réinitialiser les filtres</button>
+      </div>
+    </div>
+
+    <div id="filterMessage" class="text-sm italic mb-4"></div>
+    <div id="allPostsContainer"></div>
+  </main>
 
   <script>
+    const container = document.getElementById('allPostsContainer');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const dateFilter = document.getElementById('dateFilter');
+    const resetBtn = document.getElementById('resetBtn');
+    const filterMessage = document.getElementById('filterMessage');
+    const posts = JSON.parse(localStorage.getItem('karantez-posts') || '[]');
     const currentTheme = localStorage.getItem('karantez-theme') || 'yellow';
     document.body.className = `theme-${currentTheme}`;
 
@@ -35,34 +68,56 @@
       exhibitions: '🖼️', recipes: '🍳', series: '📺', architecture: '🏛️'
     };
 
-    const container = document.getElementById('postContainer');
     const urlParams = new URLSearchParams(window.location.search);
-    const postId = urlParams.get('id');
-    const posts = JSON.parse(localStorage.getItem('karantez-posts') || '[]');
-    const post = posts.find(p => p.id == postId);
+    const initialDateParam = urlParams.get('date') || '';
+    dateFilter.value = initialDateParam;
 
-    if (!post) {
-      container.innerHTML = '<p class="text-center">Post introuvable.</p>';
-    } else {
-      container.innerHTML = `
-        <article class="p-6 rounded shadow" style="background-color: var(--card-bg); border: 1px solid var(--border);">
-          <h2 class="text-2xl font-bold mb-2">${categories[post.category] || '📝'} ${post.title}</h2>
-          <p class="text-sm opacity-70 mb-1">${post.author ? `par ${post.author} · ` : ''}${post.date}</p>
-          <div class="my-4">
-            ${post.imageUrl ? `<img src="${post.imageUrl}" alt="${post.title}" class="rounded w-full mb-4">` : ''}
-            ${post.shortDescription ? `<p class="text-lg text-yellow-400 font-semibold mb-2">${post.shortDescription}</p>` : ''}
-            ${post.longDescription ? `<p class="leading-relaxed mb-4">${post.longDescription}</p>` : ''}
-            ${post.link ? `<a href="${post.link}" target="_blank" class="inline-block mt-2 underline text-blue-400">🔗 Voir le lien externe</a>` : ''}
+    function renderPosts() {
+      const category = categoryFilter.value;
+      const date = dateFilter.value;
+      let filtered = posts;
+
+      if (category) filtered = filtered.filter(p => p.category === category);
+      if (date) filtered = filtered.filter(p => p.date === date);
+
+      const sorted = filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      if (category || date) {
+        filterMessage.textContent = `🔎 Filtré par ${category ? categoryFilter.options[categoryFilter.selectedIndex].text : ''}${category && date ? ' et ' : ''}${date ? new Date(date).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''}`;
+      } else {
+        filterMessage.textContent = '';
+      }
+
+      if (sorted.length === 0) {
+        container.innerHTML = '<p>Aucun post trouvé.</p>';
+        return;
+      }
+
+      container.innerHTML = sorted.map(post => `
+        <article class="mb-4 p-4 rounded shadow" style="background-color: var(--card-bg); border: 1px solid var(--border);">
+          <div class="flex justify-between items-center mb-2">
+            <h2 class="text-lg font-semibold">
+              <a href="post.html?id=${post.id}" class="hover:underline" style="color: var(--accent);">
+                ${categories[post.category] || '📝'} ${post.title}
+              </a>
+            </h2>
+            <span class="text-sm opacity-70">${post.date}</span>
           </div>
-          <div class="mt-4">
-            <span class="inline-block px-3 py-1 rounded-full text-sm" style="background-color: ${post.isPublic ? '#dcfce7' : '#f3f4f6'}; color: ${post.isPublic ? '#166534' : '#374151'};">
-              ${post.isPublic ? 'Public' : 'Privé'}
-            </span>
-            <span class="ml-4">❤️ ${post.hearts}</span>
-          </div>
+          ${post.shortDescription ? `<p class="text-sm mb-2">${post.shortDescription}</p>` : ''}
+          ${post.link ? `<a href="${post.link}" target="_blank" class="text-sm underline text-blue-400">Lien externe</a>` : ''}
         </article>
-      `;
+      `).join('');
     }
+
+    categoryFilter.addEventListener('change', renderPosts);
+    dateFilter.addEventListener('change', renderPosts);
+    resetBtn.addEventListener('click', () => {
+      categoryFilter.value = '';
+      dateFilter.value = '';
+      renderPosts();
+    });
+
+    renderPosts();
   </script>
 </body>
 </html>
